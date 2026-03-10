@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realistic Analog Clock</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap');
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at center, #1e1e1e, #0f0f0f);
+            overflow: hidden;
+        }
+
+        .clock-container {
+            position: relative;
+            width: 420px;
+            height: 420px;
+            filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.6));
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="clock-container">
+        <svg id="clock" width="420" height="420" viewBox="0 0 420 420" xmlns="http://www.w3.org/2000/svg">
+            <!-- Outer metallic bezel (dark) -->
+            <circle cx="210" cy="210" r="205" fill="#1a1a1a" stroke="#0f0f0f" stroke-width="20"/>
+            
+            <!-- Bezel highlight ring -->
+            <circle cx="210" cy="210" r="192" fill="none" stroke="#f5e8c7" stroke-width="8" opacity="0.25"/>
+            
+            <!-- Main clock face (cream color with subtle texture feel) -->
+            <circle cx="210" cy="210" r="175" fill="#f9f5eb" stroke="#2c2c2c" stroke-width="14"/>
+            
+            <!-- Inner shadow ring for depth -->
+            <circle cx="210" cy="210" r="168" fill="none" stroke="#e8d9c0" stroke-width="4" opacity="0.6"/>
+        </svg>
+    </div>
+
+    <script>
+        const svg = document.getElementById('clock');
+        const ns = "http://www.w3.org/2000/svg";
+        const centerX = 210;
+        const centerY = 210;
+        const radius = 175;
+
+        // === CREATE HOUR TICKS & MINUTE TICKS ===
+        for (let i = 0; i < 60; i++) {
+            const angle = (i * 6) * (Math.PI / 180) - Math.PI / 2; // 12 o'clock = top
+            const isHourTick = i % 5 === 0;
+
+            const outerR = radius - 8;
+            const innerR = isHourTick ? radius - 42 : radius - 24;
+
+            const x1 = centerX + outerR * Math.cos(angle);
+            const y1 = centerY + outerR * Math.sin(angle);
+            const x2 = centerX + innerR * Math.cos(angle);
+            const y2 = centerY + innerR * Math.sin(angle);
+
+            const tick = document.createElementNS(ns, 'line');
+            tick.setAttribute('x1', x1);
+            tick.setAttribute('y1', y1);
+            tick.setAttribute('x2', x2);
+            tick.setAttribute('y2', y2);
+            tick.setAttribute('stroke', '#222222');
+            tick.setAttribute('stroke-width', isHourTick ? '7' : '3');
+            tick.setAttribute('stroke-linecap', 'round');
+            svg.appendChild(tick);
+        }
+
+        // === CREATE NUMBERS (1–12) ===
+        for (let i = 1; i <= 12; i++) {
+            const angleDeg = (i * 30) - 90; // 12 at top
+            const angle = angleDeg * (Math.PI / 180);
+            const numRadius = radius - 68;
+
+            const x = centerX + numRadius * Math.cos(angle);
+            const y = centerY + numRadius * Math.sin(angle);
+
+            const text = document.createElementNS(ns, 'text');
+            text.setAttribute('x', x);
+            text.setAttribute('y', y + 6); // slight vertical adjustment for perfect centering
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'middle');
+            text.setAttribute('fill', '#222222');
+            text.setAttribute('font-family', "'Playfair Display', serif");
+            text.setAttribute('font-size', '26');
+            text.setAttribute('font-weight', '700');
+            text.setAttribute('letter-spacing', '-1px');
+            text.textContent = i === 12 ? '12' : i;
+            svg.appendChild(text);
+        }
+
+        // === CREATE HANDS (wrapped in groups for easy rotation) ===
+
+        // Hour hand group + hand
+        const hourGroup = document.createElementNS(ns, 'g');
+        const hourHand = document.createElementNS(ns, 'line');
+        hourHand.setAttribute('x1', centerX);
+        hourHand.setAttribute('y1', centerY);
+        hourHand.setAttribute('x2', centerX);
+        hourHand.setAttribute('y2', centerY - 72); // length
+        hourHand.setAttribute('stroke', '#1f2a44');
+        hourHand.setAttribute('stroke-width', '11');
+        hourHand.setAttribute('stroke-linecap', 'round');
+        hourGroup.appendChild(hourHand);
+        svg.appendChild(hourGroup);
+
+        // Minute hand group + hand
+        const minuteGroup = document.createElementNS(ns, 'g');
+        const minuteHand = document.createElementNS(ns, 'line');
+        minuteHand.setAttribute('x1', centerX);
+        minuteHand.setAttribute('y1', centerY);
+        minuteHand.setAttribute('x2', centerX);
+        minuteHand.setAttribute('y2', centerY - 115);
+        minuteHand.setAttribute('stroke', '#2c3e50');
+        minuteHand.setAttribute('stroke-width', '7');
+        minuteHand.setAttribute('stroke-linecap', 'round');
+        minuteGroup.appendChild(minuteHand);
+        svg.appendChild(minuteGroup);
+
+        // Second hand group + hand (red with counterweight)
+        const secondGroup = document.createElementNS(ns, 'g');
+        const secondHand = document.createElementNS(ns, 'line');
+        secondHand.setAttribute('x1', centerX);
+        secondHand.setAttribute('y1', centerY + 18); // slight counterweight
+        secondHand.setAttribute('x2', centerX);
+        secondHand.setAttribute('y2', centerY - 130);
+        secondHand.setAttribute('stroke', '#e74c3c');
+        secondHand.setAttribute('stroke-width', '3');
+        secondHand.setAttribute('stroke-linecap', 'round');
+        secondGroup.appendChild(secondHand);
+        svg.appendChild(secondGroup);
+
+        // Tiny red dot at tip of second hand for realism
+        const secondTip = document.createElementNS(ns, 'circle');
+        secondTip.setAttribute('cx', centerX);
+        secondTip.setAttribute('cy', centerY - 130);
+        secondTip.setAttribute('r', '4');
+        secondTip.setAttribute('fill', '#e74c3c');
+        secondGroup.appendChild(secondTip);
+
+        // Center cap (metallic look)
+        const centerCap = document.createElementNS(ns, 'circle');
+        centerCap.setAttribute('cx', centerX);
+        centerCap.setAttribute('cy', centerY);
+        centerCap.setAttribute('r', '14');
+        centerCap.setAttribute('fill', '#2c3e50');
+        centerCap.setAttribute('stroke', '#f5e8c7');
+        centerCap.setAttribute('stroke-width', '3');
+        svg.appendChild(centerCap);
+
+        const centerDot = document.createElementNS(ns, 'circle');
+        centerDot.setAttribute('cx', centerX);
+        centerDot.setAttribute('cy', centerY);
+        centerDot.setAttribute('r', '6');
+        centerDot.setAttribute('fill', '#f5e8c7');
+        svg.appendChild(centerDot);
+
+        // === ANIMATION LOOP ===
+        function updateClock() {
+            const now = new Date();
+
+            // Precise time with milliseconds for ultra-smooth second hand
+            const seconds = now.getSeconds() + now.getMilliseconds() / 1000;
+            const minutes = now.getMinutes() + seconds / 60;
+            const hours = (now.getHours() % 12) + minutes / 60;
+
+            // Convert to degrees (0° = 12 o'clock)
+            const secondDeg = seconds * 6;           // 360/60
+            const minuteDeg = minutes * 6;           // 360/60
+            const hourDeg   = hours * 30;            // 360/12
+
+            // Apply smooth rotation (SVG transform around center)
+            hourGroup.setAttribute('transform', `rotate(${hourDeg} ${centerX} ${centerY})`);
+            minuteGroup.setAttribute('transform', `rotate(${minuteDeg} ${centerX} ${centerY})`);
+            secondGroup.setAttribute('transform', `rotate(${secondDeg} ${centerX} ${centerY})`);
+        }
+
+        // Run at ~60fps for buttery-smooth movement
+        function clockLoop() {
+            updateClock();
+            requestAnimationFrame(clockLoop);
+        }
+
+        // Start the clock
+        clockLoop();
+    </script>
+</body>
+</html>

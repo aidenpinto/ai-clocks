@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analog Clock</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Didact+Gothic&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #e8c97a;
+      --gold-dark: #8a6820;
+      --cream: #f5f0e8;
+      --deep: #1a1410;
+      --face: #faf7f2;
+      --shadow: rgba(0,0,0,0.45);
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at 40% 30%, #2c2318 0%, #0d0a07 70%);
+      font-family: 'Didact Gothic', sans-serif;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .scene {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      animation: fadeIn 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      opacity: 0;
+    }
+
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+
+    .brand {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      letter-spacing: 0.38em;
+      font-size: 0.72rem;
+      color: var(--gold);
+      text-transform: uppercase;
+      opacity: 0.85;
+    }
+
+    /* Outer case */
+    .clock-outer {
+      position: relative;
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      background: conic-gradient(
+        from 0deg,
+        #8a6820 0deg, #e8c97a 45deg, #c9a84c 90deg,
+        #6b4f12 135deg, #e8c97a 180deg, #c9a84c 225deg,
+        #8a6820 270deg, #e8c97a 315deg, #c9a84c 360deg
+      );
+      box-shadow:
+        0 0 0 2px #3a2a0a,
+        0 8px 40px rgba(0,0,0,0.75),
+        0 2px 6px rgba(0,0,0,0.6),
+        inset 0 1px 2px rgba(255,220,120,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Bezel ring */
+    .clock-bezel {
+      position: absolute;
+      inset: 6px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1c1409 0%, #2e2010 50%, #1c1409 100%);
+      box-shadow:
+        inset 0 2px 6px rgba(255,200,80,0.15),
+        inset 0 -2px 6px rgba(0,0,0,0.6);
+    }
+
+    /* Clock face */
+    .clock-face {
+      position: absolute;
+      inset: 18px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at 35% 30%, #fdfaf4 0%, #f5f0e6 45%, #ede4d3 100%);
+      box-shadow:
+        inset 0 1px 12px rgba(0,0,0,0.12),
+        inset 0 -1px 4px rgba(255,255,255,0.8);
+      overflow: hidden;
+    }
+
+    /* Subtle texture on face */
+    .clock-face::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: repeating-conic-gradient(
+        rgba(180,160,120,0.03) 0deg 1deg,
+        transparent 1deg 6deg
+      );
+    }
+
+    /* Minute track ring */
+    .clock-face::after {
+      content: '';
+      position: absolute;
+      inset: 8px;
+      border-radius: 50%;
+      border: 1px solid rgba(180,150,80,0.2);
+    }
+
+    /* SVG for tick marks & numerals */
+    .clock-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Logo / brand on dial */
+    .dial-brand {
+      position: absolute;
+      top: 34%;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.6rem;
+      font-weight: 400;
+      letter-spacing: 0.28em;
+      color: #8a6820;
+      text-transform: uppercase;
+      white-space: nowrap;
+      opacity: 0.75;
+    }
+
+    /* Center dot */
+    .center-cap {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #e8c97a, #8a6820);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+      z-index: 20;
+    }
+
+    .center-cap::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fdf0b0, #c9a84c);
+    }
+
+    /* Hands */
+    .hand {
+      position: absolute;
+      bottom: 50%;
+      left: 50%;
+      transform-origin: bottom center;
+      border-radius: 999px;
+      z-index: 10;
+    }
+
+    .hand-hour {
+      width: 6px;
+      height: 28%;
+      margin-left: -3px;
+      background: linear-gradient(to top, #1a1410 60%, #2e2218 100%);
+      box-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+      border-radius: 4px 4px 2px 2px;
+    }
+
+    .hand-hour::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px; height: 14px;
+      background: #1a1410;
+      border-radius: 0 0 4px 4px;
+    }
+
+    .hand-minute {
+      width: 4px;
+      height: 38%;
+      margin-left: -2px;
+      background: linear-gradient(to top, #1a1410 65%, #3a3028 100%);
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+      border-radius: 3px 3px 1px 1px;
+    }
+
+    .hand-minute::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px; height: 16px;
+      background: #1a1410;
+      border-radius: 0 0 3px 3px;
+    }
+
+    .hand-second {
+      width: 1.5px;
+      height: 42%;
+      margin-left: -0.75px;
+      background: linear-gradient(to top, #c9a84c, #e8c97a 80%, #fdf0b0);
+      box-shadow: 0 0 4px rgba(200,160,60,0.5);
+      border-radius: 1px;
+      z-index: 15;
+      transition: transform 0.1s cubic-bezier(0.4, 2.3, 0.6, 1);
+    }
+
+    .hand-second::after {
+      content: '';
+      position: absolute;
+      bottom: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 1.5px; height: 18px;
+      background: var(--gold);
+      border-radius: 0 0 1px 1px;
+    }
+
+    /* Date window */
+    .date-window {
+      position: absolute;
+      top: 50%;
+      right: 22%;
+      transform: translateY(-50%);
+      width: 28px; height: 22px;
+      background: white;
+      border: 1.5px solid rgba(180,150,80,0.5);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Didact Gothic', sans-serif;
+      font-size: 0.65rem;
+      color: #1a1410;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+      z-index: 5;
+    }
+
+    /* Reflection sheen on face */
+    .face-sheen {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.35) 0%, transparent 55%);
+      pointer-events: none;
+      z-index: 25;
+    }
+
+    /* Bottom tagline */
+    .tagline {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.68rem;
+      color: rgba(201,168,76,0.5);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    /* Glow under clock */
+    .glow {
+      position: absolute;
+      width: 260px; height: 40px;
+      bottom: -30px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(201,168,76,0.12), transparent 70%);
+      filter: blur(8px);
+    }
+  </style>
+</head>
+<body>
+
+<div class="scene">
+  <span class="brand">Maison Aurel · Geneva</span>
+
+  <div class="clock-outer">
+    <div class="clock-bezel"></div>
+    <div class="clock-face" id="face">
+
+      <!-- SVG tick marks and numerals -->
+      <svg class="clock-svg" viewBox="0 0 300 300">
+        <!-- Minute ticks -->
+        <g id="ticks"></g>
+        <!-- Roman numerals -->
+        <g id="numerals" font-family="Cormorant Garamond, serif" fill="#6b4f12" text-anchor="middle" dominant-baseline="central"></g>
+      </svg>
+
+      <span class="dial-brand">Automatic</span>
+
+      <!-- Date window -->
+      <div class="date-window" id="dateDisp">—</div>
+
+      <!-- Hands -->
+      <div class="hand hand-hour"   id="hourHand"></div>
+      <div class="hand hand-minute" id="minuteHand"></div>
+      <div class="hand hand-second" id="secondHand"></div>
+
+      <!-- Center cap -->
+      <div class="center-cap"></div>
+
+      <!-- Glass sheen -->
+      <div class="face-sheen"></div>
+    </div>
+    <div class="glow"></div>
+  </div>
+
+  <span class="tagline">Le Temps Suspendu</span>
+</div>
+
+<script>
+  const cx = 150, cy = 150, r = 130;
+  const tickG = document.getElementById('ticks');
+  const numG  = document.getElementById('numerals');
+
+  // Draw ticks
+  for (let i = 0; i < 60; i++) {
+    const angle = (i / 60) * 2 * Math.PI - Math.PI / 2;
+    const isMajor = i % 5 === 0;
+    const isQuarter = i % 15 === 0;
+    const len = isQuarter ? 18 : isMajor ? 13 : 6;
+    const stroke = isQuarter ? 2.2 : isMajor ? 1.5 : 0.8;
+    const color = isQuarter ? '#8a6820' : isMajor ? '#a0782a' : '#c8b87a';
+    const rOuter = r - 5;
+    const rInner = rOuter - len;
+    const x1 = cx + rOuter * Math.cos(angle);
+    const y1 = cy + rOuter * Math.sin(angle);
+    const x2 = cx + rInner * Math.cos(angle);
+    const y2 = cy + rInner * Math.sin(angle);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+    line.setAttribute('stroke', color);
+    line.setAttribute('stroke-width', stroke);
+    line.setAttribute('stroke-linecap', 'round');
+    tickG.appendChild(line);
+  }
+
+  // Roman numerals
+  const romans = ['XII','I','II','III','IV','V','VI','VII','VIII','IX','X','XI'];
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * 2 * Math.PI - Math.PI / 2;
+    const nr = r - 32;
+    const x = cx + nr * Math.cos(angle);
+    const y = cy + nr * Math.sin(angle);
+    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+    text.setAttribute('x', x); text.setAttribute('y', y);
+    text.setAttribute('font-size', i % 3 === 0 ? '15' : '11.5');
+    text.setAttribute('font-weight', i % 3 === 0 ? '400' : '300');
+    text.setAttribute('fill', i % 3 === 0 ? '#6b4f12' : '#9a7a30');
+    text.textContent = romans[i];
+    numG.appendChild(text);
+  }
+
+  // Clock logic
+  const hourHand   = document.getElementById('hourHand');
+  const minuteHand = document.getElementById('minuteHand');
+  const secondHand = document.getElementById('secondHand');
+  const dateDisp   = document.getElementById('dateDisp');
+
+  let prevSec = -1;
+
+  function tick() {
+    const now = new Date();
+    const h = now.getHours() % 12;
+    const m = now.getMinutes();
+    const s = now.getSeconds();
+    const ms = now.getMilliseconds();
+
+    const hDeg = (h / 12) * 360 + (m / 60) * 30;
+    const mDeg = (m / 60) * 360 + (s / 60) * 6;
+    const sDeg = (s / 60) * 360 + (ms / 1000) * 6;
+
+    hourHand.style.transform   = `translateX(-50%) rotate(${hDeg}deg)`;
+    minuteHand.style.transform = `translateX(-50%) rotate(${mDeg}deg)`;
+    secondHand.style.transform = `translateX(-50%) rotate(${sDeg}deg)`;
+
+    dateDisp.textContent = now.getDate();
+    requestAnimationFrame(tick);
+  }
+
+  tick();
+</script>
+</body>
+</html>
